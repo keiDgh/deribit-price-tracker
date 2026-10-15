@@ -5,5 +5,6 @@ from datetime import datetime
 class Price:
     id: int
     currency_id: int
-    price_usd: str
+    price: float
+    timestamp: int
     created_at: datetime
