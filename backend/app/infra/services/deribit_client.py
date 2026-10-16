@@ -26,7 +26,7 @@ class DeribitClient:
         self._session=session
         self._url=settings.deribit_api_url
 
-    async def get_index_price(self, index_name: str) -> float:
+    async def get_index_price(self, index_name: str) -> Decimal:
         result = await self._call(
             method="public/get_index_price",
             params={"index_name": index_name},
