@@ -14,12 +14,12 @@ router = APIRouter()
         response_model=list[PriceSchema], 
         summary="Get ticker's prices"
 )
-async def get_prices(
+async def get_prices_by_ticker(
     price_service: PriceServiceDep, 
     currency_service: CurrencyServiceDep, 
-    ticker: str = Query(default="btc_usd"), 
+    ticker: str = Query(), 
     skip: int = Query(default=0, ge=0), 
-    limit: int = Query(default=10, ge=20, le=200)
+    limit: int = Query(default=50, ge=1, le=200)
 ):
     try:
         currency = await currency_service.get_by_ticker(ticker)
@@ -46,10 +46,10 @@ async def get_prices(
         "/latest", 
         response_model=PriceSchema
 )
-async def get_prices(
+async def get_latest_price(
     price_service: PriceServiceDep, 
     currency_service: CurrencyServiceDep, 
-    ticker: str = Query(default="btc_usd"), 
+    ticker: str = Query(), 
 ):
     try:
         currency = await currency_service.get_by_ticker(ticker)
@@ -80,12 +80,12 @@ async def get_prices(
         "/history", 
         response_model=list[PriceSchema]
 )
-async def get_prices(
+async def get_prices_history(
     price_service: PriceServiceDep, 
     currency_service: CurrencyServiceDep, 
-    ticker: str = Query(default="btc_usd"), 
+    ticker: str = Query(), 
     skip: int = Query(default=0, ge=0), 
-    limit: int = Query(default=10, ge=20, le=200), 
+    limit: int = Query(default=50, ge=1, le=200), 
     start: datetime = Query(), 
     end: datetime = Query()
 ):
