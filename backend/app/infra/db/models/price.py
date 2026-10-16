@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, DateTime, Index, Numeric, ForeignKey, func
+from sqlalchemy import BigInteger, DateTime, Numeric, ForeignKey, func, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.base import Base
@@ -21,3 +21,7 @@ class Price(Base):
     )
     
     currency: Mapped["Currency"] = relationship("Currency", back_populates="prices", lazy="selectin")
+
+    __table_args__ = (
+            UniqueConstraint("currency_id", "timestamp", name="uq_prices_currency_id_timestamp"),
+        )
