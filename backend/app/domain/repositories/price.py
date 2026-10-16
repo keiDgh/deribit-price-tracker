@@ -1,6 +1,7 @@
 from app.domain.models import Price
 from abc import ABC, abstractmethod
 
+from decimal import Decimal
 from datetime import datetime
 
 class PriceRepository(ABC):
@@ -17,4 +18,4 @@ class PriceRepository(ABC):
     async def get_last(self, ticker: str) -> Price | None: ...
 
     @abstractmethod
-    async def add(self, currency_id: int, price: float) -> Price: ...
+    async def add(self, currency_id: int, price: Decimal, timestamp: int) -> Price: ...
