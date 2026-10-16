@@ -17,7 +17,7 @@ router = APIRouter()
 async def get_prices(
     price_service: PriceServiceDep, 
     currency_service: CurrencyServiceDep, 
-    ticker: int = Query(default="btc"), 
+    ticker: str = Query(default="btc_usd"), 
     skip: int = Query(default=0, ge=0), 
     limit: int = Query(default=10, ge=20, le=200)
 ):
@@ -44,12 +44,12 @@ async def get_prices(
 
 @router.get(
         "/latest", 
-        response_model=list[PriceSchema]
+        response_model=PriceSchema
 )
 async def get_prices(
     price_service: PriceServiceDep, 
     currency_service: CurrencyServiceDep, 
-    ticker: int = Query(default="btc"), 
+    ticker: str = Query(default="btc_usd"), 
 ):
     try:
         currency = await currency_service.get_by_ticker(ticker)
@@ -60,6 +60,12 @@ async def get_prices(
         )
     
     price = await price_service.get_last(ticker)
+
+    if price is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Prices info is not found or not set yet"
+        )
 
     return PriceSchema(
         id=price.id, 
@@ -77,7 +83,7 @@ async def get_prices(
 async def get_prices(
     price_service: PriceServiceDep, 
     currency_service: CurrencyServiceDep, 
-    ticker: int = Query(default="btc"), 
+    ticker: str = Query(default="btc_usd"), 
     skip: int = Query(default=0, ge=0), 
     limit: int = Query(default=10, ge=20, le=200), 
     start: datetime = Query(), 
