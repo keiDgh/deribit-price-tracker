@@ -48,7 +48,7 @@ class DeribitClient:
         }
 
         try:
-            async with self._session.get(
+            async with self._session.post(
                 url=f"{self._url}/{method}",
                 json=payload,
                 timeout=DEFAULT_TIMEOUT,
