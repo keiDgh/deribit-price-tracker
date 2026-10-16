@@ -1,10 +1,14 @@
-from alembic import command
-from alembic.config import Config
-from app.infra.settings.config import settings
+import asyncio
+
+from app.infra.scripts.run_migrations import run_migrations
+from app.infra.scripts.seed_data import seed_data
 
 
-def run_migrations() -> None:
-    cfg = Config("alembic.ini")
-    sync_url = f"postgresql://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
-    cfg.set_main_option("sqlalchemy.url", sync_url)
-    command.upgrade(cfg, "head")
+def main() -> None:
+    run_migrations()
+    asyncio.run(seed_data())
+    print("Migrations and seed completed successfully")
+
+
+if __name__ == "__main__":
+    main()
