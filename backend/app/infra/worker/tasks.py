@@ -3,6 +3,8 @@ from app.infra.services import DeribitClient
 from app.infra.repositories import SqlPriceRepository
 from app.infra.db.session import get_async_session
 
+from app.domain.exceptions import DuplicatePriceError, RelatedCurrencyNotFound
+
 import aiohttp
 import asyncio
 import time
@@ -23,17 +25,21 @@ async def _collect_index_prices() -> None:
     async with get_async_session() as db_session:
         repo = SqlPriceRepository(db_session)
 
-        await repo.add(
-            currency_id=currency_ids["btc_usd"],
-            price=btc_price,
-            timestamp=now,
-        )
-        await repo.add(
-            currency_id=currency_ids["eth_usd"],
-            price=eth_price,
-            timestamp=now,
-        )
-
+        try:
+            await repo.add(
+                currency_id=currency_ids["btc_usd"],
+                price=btc_price,
+                timestamp=now,
+            )
+            await repo.add(
+                currency_id=currency_ids["eth_usd"],
+                price=eth_price,
+                timestamp=now,
+            )
+        except DuplicatePriceError:
+            pass
+        except RelatedCurrencyNotFound:
+            raise
 
 @shared_task(name="app.infra.worker.tasks.collect_index_price")
 def collect_index_price():
