@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 from asyncpg.exceptions import ForeignKeyViolationError
 
 from datetime import datetime
+from decimal import Decimal
 
 from app.domain.repositories import PriceRepository
 from app.domain.models import Price
@@ -19,6 +20,7 @@ class SqlPriceRepository(PriceRepository):
     def _to_domain(self, price: PriceORM) -> Price:
         return Price(
             id=price.id, 
+            currency_id=price.currency_id, 
             price=price.price, 
             timestamp=price.timestamp, 
             created_at=price.created_at
@@ -39,18 +41,16 @@ class SqlPriceRepository(PriceRepository):
 
     async def get_by_ticker(self, ticker: str, skip: int, limit: int) -> list[Price]:
         query = (
-            select(CurrencyORM).
-            options(selectinload(CurrencyORM.prices)).
-            where(CurrencyORM.ticker==ticker). 
+            select(PriceORM)
+            .join(CurrencyORM, PriceORM.currency_id == CurrencyORM.id)
+            .where(CurrencyORM.ticker == ticker)
+            .order_by(PriceORM.timestamp.asc()).
             offset(skip).
             limit(limit)
         )
-        currency = (await self._db.execute(query)).scalars().first()
+        prices = (await self._db.execute(query)).scalars().all()
         
-        if currency is None:
-            raise CurrencyNotFoundError(f"Currency with ticker {ticker} was not found") 
-        
-        return  [self._to_domain(price) for price in currency.prices]
+        return  [self._to_domain(price) for price in prices]
 
     async def get_by_ticker_and_period(
             self, 
@@ -79,10 +79,11 @@ class SqlPriceRepository(PriceRepository):
     async def add(
             self, 
             currency_id: int, 
-            price: float
+            price: Decimal, 
+            timestamp: int
     ) -> Price: 
 
-        price = PriceORM(currency_id=currency_id, price=price)
+        price = PriceORM(currency_id=currency_id, price=price, timestamp=timestamp)
 
         self._db.add(price)
         try:
