@@ -10,4 +10,6 @@ class CurrencyRepository(ABC):
 
     @abstractmethod
     async def get_all() -> list[Currency]: ...
-    
+
+    @abstractmethod
+    async def add(ticker: str, name: str) -> Currency: ...
