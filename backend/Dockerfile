@@ -13,6 +13,7 @@ COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 
 COPY app ./app
+COPY alembic.ini .
 
 EXPOSE 8000
 

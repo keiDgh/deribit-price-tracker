@@ -4,13 +4,7 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    restart: unless-stopped
+    restart: no
     ports:
       - "8000:8000"
     env_file:
@@ -20,12 +14,29 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+      image: deribit-backend:latest
+      build:
+        context: ./backend
+        dockerfile: Dockerfile
+      env_file:
+        - "./backend/.env"
+      command: python -m app.infra.scripts.run_migrations_and_seed
+      depends_on:
+        postgres:
+          condition: service_healthy
+        redis:
+          condition: service_healthy
+      restart: "no"
 
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     ports:
-      - "5430:5432"
+      - "5432:5432"
     volumes:
       - postgres-vol:/var/lib/postgresql/data
     env_file:
@@ -40,7 +51,7 @@ services:
     image: redis:7.4-alpine
     restart: unless-stopped
     ports:
-      - "6378:6379"
+      - "6379:6379"
     volumes:
       - redis-vol:/data
     healthcheck:
@@ -62,8 +73,8 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-      backend:
-        condition: service_healthy   
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   beat:
