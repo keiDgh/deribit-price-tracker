@@ -1,0 +1,86 @@
+services:
+  backend:
+    image: deribit-backend:latest
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - "./backend/.env"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5430:5432"
+    volumes:
+      - postgres-vol:/var/lib/postgresql/data
+    env_file:
+      - "./backend/.env"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+  
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    ports:
+      - "6378:6379"
+    volumes:
+      - redis-vol:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  worker:
+    image: deribit-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - "./backend/.env"
+    command: celery -A app.infra.worker.celery_app:celery_app worker -l info
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy   
+    restart: unless-stopped
+
+  beat:
+    image: deribit-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - "./backend/.env"
+    command: celery -A app.infra.worker.celery_app:celery_app beat -l info
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres-vol:
+  redis-vol:
