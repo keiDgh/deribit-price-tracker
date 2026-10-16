@@ -22,7 +22,7 @@ RedisClientDep = Annotated[RedisClient, Depends(get_redis_client)]
 def get_price_cache_service(redis_client: RedisClientDep):
     return PriceCacheService(redis_client)
 
-PriceCacheServiceDep = Annotated[PriceCacheService, Annotated(get_price_cache_service)]
+PriceCacheServiceDep = Annotated[PriceCacheService, Depends(get_price_cache_service)]
 
 def get_currency_repository(db: DBSession):
     return SqlCurrencyRepository(db)
