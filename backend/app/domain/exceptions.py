@@ -6,6 +6,9 @@ class CurrencyError(Exception):
 class CurrencyNotFoundError(CurrencyError):
     pass
 
+class TickerAlreadyExistsError(CurrencyError):
+    pass
+
 
 class PriceError(Exception):
     pass
