@@ -52,7 +52,7 @@ class PriceCacheService(PriceCachePort):
         
         return value
 
-    async def set(self, ticker: str, value: Price) -> None: 
-        value = self._serialize(value)
+    async def set(self, ticker: str, price: Price) -> None: 
+        value = self._serialize(price)
 
         await self._redis.set(id=ticker, value=value, ex=self._ttl)
