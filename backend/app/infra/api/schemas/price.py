@@ -1,8 +1,9 @@
 from pydantic import BaseModel, ConfigDict
+from decimal import Decimal
 
 class PriceSchema(BaseModel):
     id: int
     ticker: str
     name: str
-    price: float
+    price: Decimal
     timestamp: int
