@@ -19,3 +19,6 @@ class PriceNotFoundError(PriceError):
 class RelatedCurrencyNotFound(PriceError):
     """Попытка сослаться на несуществующую валюту при создании"""
     pass
+
+class DuplicatePriceError(PriceError):
+    pass
