@@ -7,15 +7,27 @@ from app.infra.settings.config import settings
 from app.infra.services import RedisClient
 
 import json
+from typing import Any
 from dataclasses import fields
+from datetime import datetime
+from decimal import Decimal
 
 class PriceCacheService(PriceCachePort):
     def __init__(self, redis: RedisClient):
         self._redis=redis
         self._ttl=settings.cache_ttl_seconds
 
+    def _serialize_value(self, obj: Any) -> Any | None:
+        if obj is None:
+            return None
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        if isinstance(obj, Decimal):
+            return Decimal(obj)
+        return obj
+
     def _serialize(self, value: Price) -> str:
-        result = json.dumps({c.name: getattr(value, c.name) for c in fields(value)})
+        result = json.dumps({c.name: self._serialize_value(getattr(value, c.name)) for c in fields(value)})
         return result
 
     def _deserialize(self, value: str | None) -> Price:
