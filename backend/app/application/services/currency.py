@@ -11,8 +11,5 @@ class CurrencyService:
     async def get_by_ticker(self, ticker: str) -> Currency:
         return await self._repository.get_by_ticker(ticker)    
 
-    async def get_all(self) -> list[Currency]:
-        return await self._repository.get_all()
-
     async def add(self, ticker: str, name: str) -> None:
         await self._repository.add(ticker=ticker, name=name)

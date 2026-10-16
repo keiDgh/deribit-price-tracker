@@ -47,12 +47,6 @@ class SqlCurrencyRepository(CurrencyRepository):
 
         return self._to_domain(currency)
 
-    async def get_all(self):
-        query = select(CurrencyORM)
-        currencies = (await self._db.execute(query)).scalars().all()
-
-        return [self._to_domain(currency) for currency in currencies]
-
     async def add(self, ticker: str, name: str) -> None:
         currency = CurrencyORM(ticker=ticker, name=name)
 
