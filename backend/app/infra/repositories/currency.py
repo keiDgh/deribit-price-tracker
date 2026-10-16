@@ -2,9 +2,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from asyncpg.exceptions import UniqueViolationError
+
 from app.domain.repositories import CurrencyRepository
 from app.domain.models import Currency
-from app.domain.exceptions import CurrencyNotFoundError
+from app.domain.exceptions import CurrencyNotFoundError, TickerAlreadyExistsError
 
 from app.infra.db.models import Currency as CurrencyORM
 
@@ -50,7 +52,18 @@ class SqlCurrencyRepository(CurrencyRepository):
         currencies = (await self._db.execute(query)).scalars().all()
 
         return [self._to_domain(currency) for currency in currencies]
-        
 
-    
+    async def add(self, ticker: str, name: str) -> None:
+        currency = CurrencyORM(ticker=ticker, name=name)
+
+        self._db.add(currency)
+
+        try:
+            await self._db.commit()
+        except UniqueViolationError: 
+            await self._db.rollback()
+            raise TickerAlreadyExistsError(f"Currency with ticker '{ticker}' already exists")
+
+        await self._db.refresh(currency)
         
+        return self._to_domain(currency)        
