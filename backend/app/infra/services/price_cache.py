@@ -7,8 +7,6 @@ from app.infra.settings.config import settings
 from app.infra.services import RedisClient
 
 import json
-from typing import Any
-from dataclasses import fields
 from datetime import datetime
 from decimal import Decimal
 
@@ -17,18 +15,15 @@ class PriceCacheService(PriceCachePort):
         self._redis=redis
         self._ttl=settings.cache_ttl_seconds
 
-    def _serialize_value(self, obj: Any) -> Any | None:
-        if obj is None:
-            return None
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        if isinstance(obj, Decimal):
-            return Decimal(obj)
-        return obj
-
     def _serialize(self, value: Price) -> str:
-        result = json.dumps({c.name: self._serialize_value(getattr(value, c.name)) for c in fields(value)})
-        return result
+        result = {
+            "id": value.id, 
+            "currency_id": value.currency_id, 
+            "price": str(value.price), 
+            "timestamp": value.timestamp, 
+            "created_at": str(value.created_at)
+        }
+        return json.dumps(result)
 
     def _deserialize(self, value: str | None) -> Price:
         if value is None:
@@ -36,8 +31,14 @@ class PriceCacheService(PriceCachePort):
         
         try:
             loaded = json.loads(value)
-            result = Price(**loaded)
-        except (KeyError, ValueError, json.JSONDecodeError) as e:
+            result = Price(
+                id=int(loaded["id"]), 
+                currency_id=int(loaded["currency_id"]), 
+                price=Decimal(loaded["price"]), 
+                timestamp=int(loaded["timestamp"]), 
+                created_at=datetime.fromisoformat(loaded["created_at"])
+            )
+        except (KeyError, ValueError, TypeError, json.JSONDecodeError) as e:
             raise CacheInvalidError("Cache is not valid") from e
         return result
 
