@@ -11,7 +11,8 @@ router = APIRouter()
 
 @router.get(
         "", 
-        response_model=list[PriceSchema]
+        response_model=list[PriceSchema], 
+        summary="Get ticker's prices"
 )
 async def get_prices(
     price_service: PriceServiceDep, 
