@@ -10,4 +10,4 @@ class Currency(Base):
     ticker: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
 
-    prices: Mapped[list["Price"]] = relationship(back_populates="currency", lazy="selectin")
+    prices: Mapped[list["Price"]] = relationship("Price", back_populates="currency", lazy="selectin", cascade="all, delete-orphan")
