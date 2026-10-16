@@ -60,13 +60,15 @@ class SqlPriceRepository(PriceRepository):
             skip: int, 
             limit: int
     ) -> list[Price]: 
+        start_ts = int(start.timestamp())
+        end_ts = int(end.timestamp()) 
         query = (
             select(PriceORM)
             .join(CurrencyORM, PriceORM.currency_id == CurrencyORM.id)
             .where(
                 CurrencyORM.ticker == ticker,
-                PriceORM.timestamp >= start,
-                PriceORM.timestamp <= end,
+                PriceORM.timestamp >= start_ts,
+                PriceORM.timestamp <= end_ts,
             )
             .order_by(PriceORM.timestamp.asc()).
             offset(skip).
