@@ -5,6 +5,7 @@ from app.application.ports import PriceCachePort
 from app.application.exceptions import CacheError
 
 from datetime import datetime
+from decimal import Decimal
 
 class PriceService:
     def __init__(self, repository: PriceRepository, cache_service: PriceCachePort):
@@ -33,8 +34,8 @@ class PriceService:
             limit=limit
         )
 
-    async def add(self, currency_id: int, price: float) -> Price: 
-        return await self._repository.add(currency_id=currency_id, price=price)
+    async def add(self, currency_id: int, price: Decimal, timestamp: int) -> Price: 
+        return await self._repository.add(currency_id=currency_id, price=price, timestamp=timestamp)
 
     async def get_last(self, ticker: str) -> Price | None:
         try:
