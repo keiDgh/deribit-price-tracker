@@ -2,14 +2,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 
-from asyncpg.exceptions import ForeignKeyViolationError
+from asyncpg.exceptions import ForeignKeyViolationError, UniqueViolationError
 
 from datetime import datetime
 from decimal import Decimal
 
 from app.domain.repositories import PriceRepository
 from app.domain.models import Price
-from app.domain.exceptions import PriceNotFoundError, CurrencyNotFoundError, RelatedCurrencyNotFound
+from app.domain.exceptions import PriceNotFoundError, RelatedCurrencyNotFound, DuplicatePriceError
 
 from app.infra.db.models import Price as PriceORM, Currency as CurrencyORM
 
@@ -91,6 +91,9 @@ class SqlPriceRepository(PriceRepository):
         except ForeignKeyViolationError:
             await self._db.rollback()
             raise RelatedCurrencyNotFound(f"Currency with ID {currency_id} does not exist. ForeignKey violation")
+        except UniqueViolationError:
+            await self._db.rollback()
+            raise DuplicatePriceError(f"Price with {currency_id} and {timestamp} already exists")
         
         await self._db.refresh(price)
 
